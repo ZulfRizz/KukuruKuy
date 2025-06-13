@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Product;
+use App\Models\Ingredient; // <-- PENTING: Tambahkan ini
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,7 +14,6 @@ use Filament\Tables\Table;
 class ProductResource extends Resource {
     protected static ?string $model = Product::class;
 
-    // Konfigurasi untuk menu navigasi
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
     protected static ?string $navigationGroup = 'Manajemen Produk';
     protected static ?string $modelLabel = 'Produk Menu';
@@ -36,7 +36,7 @@ class ProductResource extends Resource {
                         Forms\Components\FileUpload::make('image_url')
                             ->label('Gambar Produk')
                             ->image()
-                            ->directory('product-images'), // Folder penyimpanan gambar
+                            ->directory('product-images'),
                         Forms\Components\Textarea::make('description')
                             ->label('Deskripsi')
                             ->columnSpanFull(),
@@ -45,21 +45,26 @@ class ProductResource extends Resource {
                 Forms\Components\Section::make('Resep Produk')
                     ->description('Tentukan bahan baku dan jumlah yang dibutuhkan untuk membuat satu porsi produk ini.')
                     ->schema([
-                        // Fitur canggih untuk manajemen resep (relasi many-to-many)
                         Forms\Components\Repeater::make('ingredients')
                             ->label('Bahan Baku')
                             ->relationship()
                             ->schema([
+                                // === BAGIAN YANG DIPERBAIKI ===
                                 Forms\Components\Select::make('ingredient_id')
                                     ->label('Bahan Baku')
-                                    ->relationship('ingredient', 'name')
+                                    // Hapus ->relationship() dan ganti dengan ->options()
+                                    ->options(Ingredient::all()->pluck('name', 'id'))
                                     ->searchable()
                                     ->preload()
-                                    ->required(),
+                                    ->required()
+                                    ->distinct() // Mencegah bahan baku yang sama dipilih dua kali
+                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(), // Sembunyikan jika sudah dipilih
                                 Forms\Components\TextInput::make('quantity')
                                     ->label('Jumlah')
                                     ->required()
                                     ->numeric(),
+                                // Anda bisa menghapus kolom unit dari sini jika sudah ditentukan di Ingredient
+                                // atau biarkan jika resepnya bisa menggunakan satuan berbeda
                                 Forms\Components\Select::make('unit')
                                     ->label('Satuan')
                                     ->options([
@@ -76,6 +81,7 @@ class ProductResource extends Resource {
     }
 
     public static function table(Table $table): Table {
+        // ... (Method table tidak perlu diubah, biarkan seperti sebelumnya) ...
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('image_url')
@@ -107,6 +113,7 @@ class ProductResource extends Resource {
             ]);
     }
 
+    // ... (getRelations dan getPages biarkan seperti sebelumnya) ...
     public static function getRelations(): array {
         return [
             //

@@ -32,19 +32,19 @@
             <h1 class="text-3xl font-bold tracking-wider text-left">KukuruKuy POS</h1>
         </div>
         
-        <div class="text-right">
+        <!-- Tombol Logout dan Info User -->
+        <div class="flex items-center gap-4">
             @auth
+            <div class="text-right">
                 <p class="font-semibold text-sm">
                     Cabang: {{ Auth::user()->franchise->name ?? 'Pusat' }}
                 </p>
                 <p class="font-semibold">
                     Kasir: {{ Auth::user()->name }}
                 </p>
+            </div>
             @endauth
-        </div>
-
-        <!-- Tombol Logout -->
-        <div>
+            
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
@@ -101,9 +101,9 @@
     
     <!-- Elemen tersembunyi untuk menyimpan data dari Blade -->
     <div id="app-data"
-         data-products="{{ $products->toJson() }}"
-         data-order-url="{{ route('kasir.order.store') }}"
-         hidden>
+        data-products="{{ $products->toJson() }}"
+        data-order-url="{{ route('kasir.order.store') }}"
+        hidden>
     </div>
 
 
