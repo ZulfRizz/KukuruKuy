@@ -3,56 +3,93 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
-use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ProductResource extends Resource
-{
+class ProductResource extends Resource {
     protected static ?string $model = Product::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    // Konfigurasi untuk menu navigasi
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static ?string $navigationGroup = 'Manajemen Produk';
+    protected static ?string $modelLabel = 'Produk Menu';
+    protected static ?string $pluralModelLabel = 'Produk Menu';
 
-    public static function form(Form $form): Form
-    {
+    public static function form(Form $form): Form {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Textarea::make('description')
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('price')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
-                Forms\Components\FileUpload::make('image_url')
-                    ->image(),
+                Forms\Components\Section::make('Informasi Produk')
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nama Produk')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('price')
+                            ->label('Harga Jual')
+                            ->required()
+                            ->numeric()
+                            ->prefix('Rp'),
+                        Forms\Components\FileUpload::make('image_url')
+                            ->label('Gambar Produk')
+                            ->image()
+                            ->directory('product-images'), // Folder penyimpanan gambar
+                        Forms\Components\Textarea::make('description')
+                            ->label('Deskripsi')
+                            ->columnSpanFull(),
+                    ])->columns(2),
+
+                Forms\Components\Section::make('Resep Produk')
+                    ->description('Tentukan bahan baku dan jumlah yang dibutuhkan untuk membuat satu porsi produk ini.')
+                    ->schema([
+                        // Fitur canggih untuk manajemen resep (relasi many-to-many)
+                        Forms\Components\Repeater::make('ingredients')
+                            ->label('Bahan Baku')
+                            ->relationship()
+                            ->schema([
+                                Forms\Components\Select::make('ingredient_id')
+                                    ->label('Bahan Baku')
+                                    ->relationship('ingredient', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->required(),
+                                Forms\Components\TextInput::make('quantity')
+                                    ->label('Jumlah')
+                                    ->required()
+                                    ->numeric(),
+                                Forms\Components\Select::make('unit')
+                                    ->label('Satuan')
+                                    ->options([
+                                        'gram' => 'Gram',
+                                        'ml' => 'Mililiter',
+                                        'pcs' => 'Pcs',
+                                    ])
+                                    ->required(),
+                            ])
+                            ->columns(3)
+                            ->addActionLabel('Tambah Bahan Baku'),
+                    ]),
             ]);
     }
 
-    public static function table(Table $table): Table
-    {
+    public static function table(Table $table): Table {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('image_url')
+                    ->label('Gambar'),
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nama Produk')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('price')
-                    ->money()
+                    ->label('Harga')
+                    ->money('IDR')
                     ->sortable(),
-                Tables\Columns\ImageColumn::make('image_url'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Dibuat Pada')
+                    ->dateTime('d-M-Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -70,15 +107,13 @@ class ProductResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
-    {
+    public static function getRelations(): array {
         return [
             //
         ];
     }
 
-    public static function getPages(): array
-    {
+    public static function getPages(): array {
         return [
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),

@@ -3,56 +3,55 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\IngredientResource\Pages;
-use App\Filament\Resources\IngredientResource\RelationManagers;
 use App\Models\Ingredient;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class IngredientResource extends Resource
-{
+class IngredientResource extends Resource {
     protected static ?string $model = Ingredient::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    // Konfigurasi untuk menu navigasi
+    protected static ?string $navigationIcon = 'heroicon-o-beaker';
+    protected static ?string $navigationGroup = 'Manajemen Produk';
+    protected static ?string $modelLabel = 'Bahan Baku';
+    protected static ?string $pluralModelLabel = 'Bahan Baku';
 
-    public static function form(Form $form): Form
-    {
+    public static function form(Form $form): Form {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label('Nama Bahan Baku')
                     ->required()
+                    ->unique(ignoreRecord: true)
                     ->maxLength(255),
-                Forms\Components\TextInput::make('unit')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Select::make('unit')
+                    ->label('Satuan Dasar')
+                    ->options([
+                        'gram' => 'Gram (gr)',
+                        'ml' => 'Mililiter (ml)',
+                        'pcs' => 'Pcs (buah)',
+                    ])
+                    ->required(),
             ]);
     }
 
-    public static function table(Table $table): Table
-    {
+    public static function table(Table $table): Table {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nama Bahan Baku')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('unit')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Satuan'),
             ])
             ->filters([
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -62,15 +61,13 @@ class IngredientResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
-    {
+    public static function getRelations(): array {
         return [
             //
         ];
     }
 
-    public static function getPages(): array
-    {
+    public static function getPages(): array {
         return [
             'index' => Pages\ListIngredients::route('/'),
             'create' => Pages\CreateIngredient::route('/create'),

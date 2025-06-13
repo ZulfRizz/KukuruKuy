@@ -28,7 +28,19 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // === INI BAGIAN YANG DIPERBAIKI ===
+        // Dapatkan data user yang baru saja login
+        $user = Auth::user();
+
+        // Tentukan URL tujuan berdasarkan peran (role) user
+        $url = match ($user->role) {
+            'admin'   => 'http://app.kukurukuy.test/admin', // Admin ke panel Filament
+            'manager' => 'http://stok.kukurukuy.test',      // Manajer ke halaman stok
+            'cashier' => 'http://kasir.kukurukuy.test',     // Kasir ke halaman POS
+            default   => 'http://kasir.kukurukuy.test',     // Tujuan default jika ada peran lain
+        };
+
+        return redirect($url);
     }
 
     /**
