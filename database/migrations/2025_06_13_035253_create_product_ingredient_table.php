@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->foreignId('ingredient_id')->constrained()->onDelete('cascade');
             $table->decimal('quantity', 8, 2);
-            $table->string('unit'); // gram, ml, pcs
+            // $table->string('unit'); // gram, ml, pcs
         });
     }
 

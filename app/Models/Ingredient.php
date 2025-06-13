@@ -21,8 +21,6 @@ class Ingredient extends Model {
      * Mendefinisikan relasi many-to-many: Satu Ingredient bisa digunakan di banyak Product.
      */
     public function products(): BelongsToMany {
-        return $this->belongsToMany(Product::class, 'product_ingredient')->withPivot(
-            'quantity',
-            'unit');
+        return $this->belongsToMany(Product::class, 'product_ingredient');
     }
 }

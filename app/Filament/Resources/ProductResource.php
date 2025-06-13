@@ -4,128 +4,105 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Product;
-use App\Models\Ingredient; // <-- PENTING: Tambahkan ini
+use App\Models\Ingredient;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Infolists; // <-- PENTING: Tambahkan ini
+use Filament\Infolists\Infolist; // <-- PENTING: Tambahkan ini
 
 class ProductResource extends Resource {
     protected static ?string $model = Product::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
     protected static ?string $navigationGroup = 'Manajemen Produk';
-    protected static ?string $modelLabel = 'Produk Menu';
-    protected static ?string $pluralModelLabel = 'Produk Menu';
 
     public static function form(Form $form): Form {
         return $form
             ->schema([
                 Forms\Components\Section::make('Informasi Produk')
                     ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nama Produk')
-                            ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('price')
-                            ->label('Harga Jual')
-                            ->required()
-                            ->numeric()
-                            ->prefix('Rp'),
-                        Forms\Components\FileUpload::make('image_url')
-                            ->label('Gambar Produk')
-                            ->image()
-                            ->directory('product-images'),
-                        Forms\Components\Textarea::make('description')
-                            ->label('Deskripsi')
-                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('name')->required()->maxLength(255),
+                        Forms\Components\TextInput::make('price')->required()->numeric()->prefix('Rp'),
+                        Forms\Components\FileUpload::make('image_url')->image()->directory('product-images'),
+                        Forms\Components\Textarea::make('description')->columnSpanFull(),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Resep Produk')
-                    ->description('Tentukan bahan baku dan jumlah yang dibutuhkan untuk membuat satu porsi produk ini.')
+                    ->description('Tentukan bahan baku dan jumlah yang dibutuhkan.')
                     ->schema([
                         Forms\Components\Repeater::make('ingredients')
                             ->label('Bahan Baku')
-                            ->relationship()
                             ->schema([
-                                // === BAGIAN YANG DIPERBAIKI ===
                                 Forms\Components\Select::make('ingredient_id')
                                     ->label('Bahan Baku')
-                                    // Hapus ->relationship() dan ganti dengan ->options()
                                     ->options(Ingredient::all()->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->preload()
-                                    ->required()
-                                    ->distinct() // Mencegah bahan baku yang sama dipilih dua kali
-                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(), // Sembunyikan jika sudah dipilih
+                                    ->searchable()->preload()->required()->distinct()
+                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                                 Forms\Components\TextInput::make('quantity')
-                                    ->label('Jumlah')
-                                    ->required()
-                                    ->numeric(),
-                                // Anda bisa menghapus kolom unit dari sini jika sudah ditentukan di Ingredient
-                                // atau biarkan jika resepnya bisa menggunakan satuan berbeda
-                                Forms\Components\Select::make('unit')
-                                    ->label('Satuan')
-                                    ->options([
-                                        'gram' => 'Gram',
-                                        'ml' => 'Mililiter',
-                                        'pcs' => 'Pcs',
-                                    ])
-                                    ->required(),
+                                    ->label('Jumlah Dibutuhkan')
+                                    ->helperText('Satuan mengikuti satuan dasar bahan baku.')
+                                    ->required()->numeric(),
                             ])
-                            ->columns(3)
-                            ->addActionLabel('Tambah Bahan Baku'),
+                            ->columns(2)
+                            ->addActionLabel('Tambah Bahan Baku')
+                            ->defaultItems(0),
+                    ]),
+            ]);
+    }
+
+    // === BAGIAN BARU YANG DITAMBAHKAN ===
+    /**
+     * Mendefinisikan bagaimana data ditampilkan di halaman 'View'.
+     */
+    public static function infolist(Infolist $infolist): Infolist {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Informasi Produk')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('name'),
+                        Infolists\Components\TextEntry::make('price')->money('IDR'),
+                        Infolists\Components\ImageEntry::make('image_url')->label('Gambar'),
+                        Infolists\Components\TextEntry::make('description')->columnSpanFull(),
+                    ])->columns(2),
+
+                Infolists\Components\Section::make('Resep Produk')
+                    ->schema([
+                        // Gunakan RepeatableEntry untuk menampilkan daftar resep
+                        Infolists\Components\RepeatableEntry::make('ingredients')
+                            ->label('') // Kosongkan label agar tidak ada judul tambahan
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label('Nama Bahan Baku'),
+                                Infolists\Components\TextEntry::make('pivot.quantity')
+                                    ->label('Jumlah'),
+                                Infolists\Components\TextEntry::make('unit')
+                                    ->label('Satuan'),
+                            ])->columns(3)
                     ]),
             ]);
     }
 
     public static function table(Table $table): Table {
-        // ... (Method table tidak perlu diubah, biarkan seperti sebelumnya) ...
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image_url')
-                    ->label('Gambar'),
-                Tables\Columns\TextColumn::make('name')
-                    ->label('Nama Produk')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('price')
-                    ->label('Harga')
-                    ->money('IDR')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Dibuat Pada')
-                    ->dateTime('d-M-Y')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
+                Tables\Columns\ImageColumn::make('image_url')->label('Gambar'),
+                Tables\Columns\TextColumn::make('name')->searchable(),
+                Tables\Columns\TextColumn::make('price')->money('IDR')->sortable(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
             ]);
-    }
-
-    // ... (getRelations dan getPages biarkan seperti sebelumnya) ...
-    public static function getRelations(): array {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array {
         return [
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
-            'view' => Pages\ViewProduct::route('/{record}'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
+            'view' => Pages\ViewProduct::route('/{record}'), // Pastikan halaman view terdaftar
         ];
     }
 }
