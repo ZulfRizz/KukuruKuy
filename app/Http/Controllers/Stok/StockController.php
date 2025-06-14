@@ -6,36 +6,43 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Stock;
+use App\Models\Procurement;
+use App\Models\Ingredient;
 
 class StockController extends Controller {
     /**
-     * Menampilkan halaman manajemen stok untuk cabang pengguna.
-     *
-     * @return \Illuminate\View\View
+     * Menampilkan dasbor stok gabungan (melihat stok & pengadaan).
      */
     public function index() {
-        // Dapatkan user yang sedang login
         $user = Auth::user();
         $franchiseId = $user->franchise_id;
 
-        // Jika user tidak punya cabang, tampilkan halaman error atau pesan kosong
         if (!$franchiseId) {
-            // Anda bisa membuat view khusus untuk ini
             return view('stok.no_franchise');
         }
 
-        // Ambil semua data stok HANYA untuk cabang tempat user bekerja
-        // Gunakan `with('ingredient')` (Eager Loading) untuk mengambil data relasi
-        // secara efisien dan menghindari N+1 problem.
+        // Ambil data stok untuk cabang ini
         $stocks = Stock::where('franchise_id', $franchiseId)
             ->with('ingredient')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Kirim data stok ke view 'stok.index'
+        // Ambil riwayat pengajuan dari cabang ini
+        $procurements = Procurement::where('franchise_id', $franchiseId)
+            ->with('user')
+            ->latest() // Mengurutkan dari yang terbaru
+            ->take(10) // Ambil 10 riwayat terakhir
+            ->get();
+
+        // Ambil daftar semua bahan baku untuk form permintaan
+        $ingredients = Ingredient::orderBy('name')->get();
+
+        // Kirim semua data yang dibutuhkan ke satu view
         return view('stok.index', [
             'stocks' => $stocks,
-            'franchiseName' => $user->franchise->name, // Ambil nama cabang dari relasi
+            'procurements' => $procurements,
+            'ingredients' => $ingredients,
+            'franchiseName' => $user->franchise->name,
         ]);
     }
 }

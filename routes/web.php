@@ -30,9 +30,13 @@ Route::domain('kasir.kukurukuy.test')->middleware(['auth', 'verified'])->group(f
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('kasir.profile.destroy');
 });
 
-// Domain untuk Manajemen Stok
+// ===== DOMAIN UNTUK SEMUA AKTIVITAS STOK =====
 Route::domain('stok.kukurukuy.test')->middleware(['auth', 'verified'])->group(function () {
+    // Rute untuk menampilkan halaman utama (melihat stok & form pengadaan)
     Route::get('/', [StockController::class, 'index'])->name('stok.index');
+
+    // Rute untuk menyimpan permintaan pengadaan baru
+    Route::post('/request', [ProcurementController::class, 'store'])->name('stok.request.store');
 
     // Rute profil yang dibuat oleh Breeze
     Route::get('/profile', [ProfileController::class, 'edit'])->name('stok.profile.edit');
