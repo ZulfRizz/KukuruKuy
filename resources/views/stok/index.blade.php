@@ -119,28 +119,43 @@
         function createNewItemRow() {
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('flex', 'gap-2', 'items-end', 'p-2', 'border', 'rounded-md', 'bg-gray-50');
-            let optionsHtml = ingredients.map(ing => `<option value="${ing.id}">${ing.name} (${ing.unit})</option>`).join('');
+            
+            const optionsHtml = ingredients.map(ing => 
+                `<option value="${ing.id}">${ing.name} (${ing.unit})</option>`
+            ).join('');
+
             itemDiv.innerHTML = `
                 <div class="flex-grow">
                     <label class="text-xs font-medium text-gray-600">Bahan Baku</label>
-                    <select name="items[${itemIndex}][ingredient_id]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required><option value="">Pilih...</option>${optionsHtml}</select>
+                    <select name="items[${itemIndex}][ingredient_id]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required>
+                        <option value="">Pilih...</option>
+                        ${optionsHtml}
+                    </select>
                 </div>
                 <div class="w-2/5">
                     <label class="text-xs font-medium text-gray-600">Jumlah</label>
                     <input type="number" name="items[${itemIndex}][quantity]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" step="any" required>
                 </div>
-                <button type="button" class="remove-item-btn h-10 w-8 flex items-center justify-center bg-red-100 text-red-500 hover:bg-red-200 rounded-md" title="Hapus Item">&times;</button>
+                <button type="button" class="remove-item-btn h-10 w-8 flex-shrink-0 flex items-center justify-center bg-red-100 text-red-500 hover:bg-red-200 rounded-md" title="Hapus Item">&times;</button>
             `;
+
             requestItemsContainer.appendChild(itemDiv);
             itemIndex++;
         }
 
-        // Tambah baris pertama secara otomatis saat halaman dimuat
-        if(requestItemsContainer.children.length === 0) createNewItemRow();
+        // Tambahkan satu baris awal
+        if (requestItemsContainer.children.length === 0) createNewItemRow();
+
+        // Tombol untuk tambah item
         addItemBtn.addEventListener('click', createNewItemRow);
+
+        // === BAGIAN YANG DIPERBAIKI ===
+        // Menggunakan logika yang lebih sederhana dan langsung untuk menghapus
         requestItemsContainer.addEventListener('click', function(e) {
+            // Cek apakah elemen yang diklik adalah tombol hapus
             if (e.target && e.target.classList.contains('remove-item-btn')) {
-                e.target.closest('.flex').remove();
+                // Hapus elemen induk dari tombol tersebut (yaitu seluruh baris div.flex)
+                e.target.parentElement.remove();
             }
         });
     </script>

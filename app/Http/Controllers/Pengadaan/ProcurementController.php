@@ -6,33 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement;
-use App\Models\Ingredient;
+// use App\Models\Ingredient; // Tidak perlu karena kita tidak menampilkannya di sini
 
 class ProcurementController extends Controller {
-    /**
-     * Menampilkan halaman pengajuan pengadaan barang.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function index() {
-        $user = Auth::user();
-        $franchiseId = $user->franchise_id;
-
-        // Ambil riwayat pengajuan dari cabang ini
-        $procurements = Procurement::where('franchise_id', $franchiseId)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Ambil daftar bahan baku untuk ditampilkan di form pengajuan
-        $ingredients = Ingredient::orderBy('name')->get();
-
-        return view('pengadaan.index', [
-            'procurements' => $procurements,
-            'ingredients' => $ingredients,
-            'franchiseName' => $user->franchise->name,
-        ]);
-    }
-
     /**
      * Menyimpan permintaan pengadaan barang baru.
      *
@@ -41,7 +17,6 @@ class ProcurementController extends Controller {
      */
     public function store(Request $request) {
         $validated = $request->validate([
-            // Validasi untuk form pengajuan, misal:
             'items' => 'required|array|min:1',
             'items.*.ingredient_id' => 'required|exists:ingredients,id',
             'items.*.quantity' => 'required|numeric|min:1',
@@ -67,6 +42,8 @@ class ProcurementController extends Controller {
             ]);
         }
 
-        return redirect()->route('pengadaan.index')->with('success', 'Permintaan pengadaan berhasil dikirim!');
+        // === BAGIAN YANG DIPERBAIKI ===
+        // Arahkan kembali ke dasbor stok yang benar (stok.index), bukan pengadaan.index
+        return redirect()->route('stok.index')->with('success', 'Permintaan pengadaan berhasil dikirim!');
     }
 }
