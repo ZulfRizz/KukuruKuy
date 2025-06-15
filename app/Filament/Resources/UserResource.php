@@ -18,8 +18,8 @@ class UserResource extends Resource {
     // Konfigurasi untuk menu navigasi di panel admin
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationGroup = 'Manajemen Pengguna';
-    protected static ?string $modelLabel = 'Pengguna';
-    protected static ?string $pluralModelLabel = 'Pengguna';
+    // protected static ?string $modelLabel = 'Pengguna';
+    // protected static ?string $pluralModelLabel = 'Pengguna';
 
     public static function form(Form $form): Form {
         return $form

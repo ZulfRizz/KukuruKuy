@@ -10,8 +10,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Infolists; // <-- PENTING: Tambahkan ini
-use Filament\Infolists\Infolist; // <-- PENTING: Tambahkan ini
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Illuminate\Support\Facades\Storage;
 
 class ProductResource extends Resource {
     protected static ?string $model = Product::class;
@@ -25,7 +26,18 @@ class ProductResource extends Resource {
                     ->schema([
                         Forms\Components\TextInput::make('name')->required()->maxLength(255),
                         Forms\Components\TextInput::make('price')->required()->numeric()->prefix('Rp'),
-                        Forms\Components\FileUpload::make('image_url')->image()->directory('product-images'),
+
+                        // === BAGIAN YANG DIPERBAIKI ===
+                        Forms\Components\FileUpload::make('image_url')
+                            ->label('Gambar Produk')
+                            ->disk('public')
+                            ->image()
+                            ->directory('product-images')
+                            ->maxSize(2048) // Batasi ukuran upload maksimal menjadi 2MB (2048 KB)
+                            ->imageResizeMode('cover') // Mode resize
+                            ->imageResizeTargetWidth('1200') // Ubah lebar gambar menjadi 1200px
+                            ->imageResizeTargetHeight('800'), // Ubah tinggi gambar menjadi 800px
+
                         Forms\Components\Textarea::make('description')->columnSpanFull(),
                     ])->columns(2),
 
@@ -52,10 +64,6 @@ class ProductResource extends Resource {
             ]);
     }
 
-    // === BAGIAN BARU YANG DITAMBAHKAN ===
-    /**
-     * Mendefinisikan bagaimana data ditampilkan di halaman 'View'.
-     */
     public static function infolist(Infolist $infolist): Infolist {
         return $infolist
             ->schema([
@@ -69,17 +77,14 @@ class ProductResource extends Resource {
 
                 Infolists\Components\Section::make('Resep Produk')
                     ->schema([
-                        // Gunakan RepeatableEntry untuk menampilkan daftar resep
                         Infolists\Components\RepeatableEntry::make('ingredients')
-                            ->label('') // Kosongkan label agar tidak ada judul tambahan
+                            ->label('')
                             ->schema([
-                                Infolists\Components\TextEntry::make('name')
-                                    ->label('Nama Bahan Baku'),
-                                Infolists\Components\TextEntry::make('pivot.quantity')
-                                    ->label('Jumlah'),
-                                Infolists\Components\TextEntry::make('unit')
-                                    ->label('Satuan'),
-                            ])->columns(3)
+                                Infolists\Components\TextEntry::make('name')->label('Nama Bahan Baku')->weight('bold'),
+                                Infolists\Components\TextEntry::make('pivot.quantity')->label('Jumlah Dibutuhkan'),
+                                Infolists\Components\TextEntry::make('unit')->label('Satuan'),
+                            ])
+                            ->columns(3),
                     ]),
             ]);
     }
@@ -87,7 +92,7 @@ class ProductResource extends Resource {
     public static function table(Table $table): Table {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image_url')->label('Gambar'),
+                Tables\Columns\ImageColumn::make('image_url')->label('Gambar')->disk('public'),
                 Tables\Columns\TextColumn::make('name')->searchable(),
                 Tables\Columns\TextColumn::make('price')->money('IDR')->sortable(),
             ])
@@ -102,7 +107,7 @@ class ProductResource extends Resource {
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
-            'view' => Pages\ViewProduct::route('/{record}'), // Pastikan halaman view terdaftar
+            'view' => Pages\ViewProduct::route('/{record}'),
         ];
     }
 }
