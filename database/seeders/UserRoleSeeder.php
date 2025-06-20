@@ -13,17 +13,17 @@ class UserRoleSeeder extends Seeder {
      * Run the database seeds.
      */
     public function run(): void {
-        $franchisePusat = Franchise::where('name', 'KukuruKuy Bojonegoro')->first();
+        $franchiseBojonegoro = Franchise::where('name', 'KukuruKuy Bojonegoro')->first();
         $franchiseSurabaya = Franchise::where('name', 'KukuruKuy Surabaya')->first();
 
         // === Buat Manajer ===
-        if ($franchisePusat) {
+        if ($franchiseBojonegoro) {
             User::create([
                 'name' => 'Manajer Bojonegoro',
                 'email' => 'manajer.bjn@kukurukuy.com',
                 'password' => Hash::make('manajer123'),
                 'role' => 'manajer',
-                'franchise_id' => $franchisePusat->id,
+                'franchise_id' => $franchiseBojonegoro->id,
             ]);
         }
 
@@ -38,13 +38,13 @@ class UserRoleSeeder extends Seeder {
         }
 
         // === Buat Kasir ===
-        if ($franchisePusat) {
+        if ($franchiseBojonegoro) {
             User::create([
                 'name' => 'Kasir 1 Bojonegoro',
                 'email' => 'kasir1.bjn@kukurukuy.com',
                 'password' => Hash::make('kasir123'),
                 'role' => 'kasir',
-                'franchise_id' => $franchisePusat->id,
+                'franchise_id' => $franchiseBojonegoro->id,
             ]);
         }
 
